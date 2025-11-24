@@ -1,15 +1,12 @@
 User-ID,ISBN,Book-Rating,Book-Title,Book-Author,Year-Of-Publication,Publisher,Age,Book-Year-Of-Publication,User-Age
 1234567890,0451521951,5,The Count of Monte Cristo,Alexandre Dumas,1844,Signet Book,23,pre-1950,18-25
 1234567890,0684813637,5,1776,David McCullough,2005,Simon & Schuster,23,2000-2009,18-25
-1234567890,0679720200,3,The Stranger,Albert Camus,1942,Vintage,23,pre-1950,18-25
 1234567890,0345339738,5,The Return of the King,J.R.R. Tolkien,1955,Del Rey,23,1950-1979,18-25
 1234567890,0345339711,5,The Two Towers,J.R.R. Tolkien,1954,Del Rey,23,1950-1979,18-25
 1234567890,0345318587,5,The Hobbit,J.R.R. Tolkien,1937,Ballantine Books,23,pre-1950,18-25
 1234567890,0140071083,4,The Haunting of Hill House,Shirley Jackson,1959,Penguin Books,23,1950-1979,18-25
-1234567890,0198320264,3,Julius Caesar,William Shakespeare,1599,Oxford University Press,23,pre-1950,18-25
 1234567890,0451521285,5,Hamlet,William Shakespeare,1603,Signet Classics,23,pre-1950,18-25
 1234567890,0787960756,5,The Five Dysfunctions of a Team,Patrick Lencioni,2002,Jossey-Bass,23,2000-2009,18-25
-1234567890,0201328429,3,Six Easy Pieces,Richard P. Feynman,1994,Basic Books,23,1980-1999,18-25
 1234567890,0375708111,5,The Elegant Universe,Brian Greene,1999,Vintage,23,1980-1999,18-25
 1234567890,0671723650,5,How to Win Friends and Influence People,Dale Carnegie,1936,Simon & Schuster,23,pre-1950,18-25
 1234567890,0425169227,4,A Haunting in Venice,Agatha Christie,1969,Berkley Publishing Group,23,1950-1979,18-25
