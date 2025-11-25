@@ -1,8 +1,0 @@
-numpy
-pandas
-torch
-tensorboard
-scikit-learn
-# google-colab
-kagglehub
-faiss-cpu
