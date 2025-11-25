@@ -5,3 +5,4 @@ tensorboard
 scikit-learn
 # google-colab
 kagglehub
+faiss-cpu
