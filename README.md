@@ -1,5 +1,12 @@
-# booky
-Application that helps suggest books based on my own profile. I train and maintain a model offline and then utilize online methods to quickly adjust the embeddings based on my user profile. 
+# booky -- Two-Tower Book Recommender
+
+I use a Two-Tower model to generate personalized book recommendations. During training, I include my own book interaction data so the model can learn a personalized User embedding that reflects my reading preferences.
+
+After training, I extract and store all learned item embeddings in a vector index to enable fast similarity search. At inference time, the system computes a user’s embedding vector and performs an inner product with the item embeddings in the index to generate similarity scores for each book.
+
+The model achieves approximately 31% Recall@25 on the test set across all users, and in my own manual evaluations, the recommendations are qualitatively strong and aligned with *most* of my reading preferences.
+
+## Directory
 
 booky/
 ├── src/
@@ -31,3 +38,18 @@ booky/
 │
 ├── README.md
 ├── requirements.txt
+
+## Setup
+
+If you are testing the application locally, make sure git LFS is initialized correctly. 
+
+To initialize the python project, navigate to `booky/` and type:
+```
+pip install -e .
+```
+
+To run the inference function with the pretrained weights on my user profile, run:
+```
+python -m src.inference.inference
+```
+

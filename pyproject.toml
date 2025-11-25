@@ -1,0 +1,7 @@
+[project]
+name = "booky"
+version = "0.1"
+dependencies = []
+
+[tool.setuptools]
+package-dir = {"" = "src"}
