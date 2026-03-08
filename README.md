@@ -1,4 +1,4 @@
-# booky -- Two-Tower Book Recommender
+# booky
 
 ## Summary
 
