@@ -32,52 +32,27 @@ Note: My full-time job takes priority over this side project, and I will do my b
 
 ```
 booky/
-
-    ml/                               # contains all of the machine learning files                    
-    ├── src/
-    │   ├── data/
-    │   │   └── __init__.py           # load book_items.index, encoders, metadata
-    │   │
-    │   ├── model/
-    │   │   ├── two_towers.py         # model definitions (UserTower, ItemTower, TwoTowers)
-    │   │   └── __init__.py
-    │   │
-    │   ├── inference/
-    │   │   ├── inference.py          # main ranking + recommendation entrypoint
-    │   │   └── __init__.py
-    │   │
-    │   └── __init__.py
-    │
-    ├── models/
-    │   ├── two_towers_epoch50_test6.3_train2.38.pt
-    │   ├── user_tower.pth            
-    │
-    ├── data/
-    │   ├── book_items.index
-    │   ├── dataset_metadata.pkl
-    │   ├── encoders.pkl
-    │
-    ├── notebooks/
-    │   ├── good_reads_two_towers_first_edition.ipynb
-    │   ├── two_towers_final_edition.ipynb
-    │
-    ├── README.md
-    ├── requirements.txt
-```
-
-## Run locally!
-
-#### Inference
-1. Clone the repo (I am using git LFS for the larger files)
-2. Create a pyenv environment
-```
-python3 -m venv .venv
-```
-3. Install dependencies
-```
-pip install -r serving/requirements.txt
-```
-4. Run the inference file
-```
-python3 -m src.inference.inference  
+├── ml                                                         
+│   ├── artifacts                                               # Saved model state
+│   │   └── models
+│   │       ├── two_towers_epoch50_test6.3_train2.38.pt
+│   │       └── user_tower.pth
+│   ├── data                                                    # Contains csv data the model uses
+│   │   ├── mocked
+│   │   │   └── fine-tuning-book-set.txt
+│   │   └── raw
+│   │       └── // git ignored
+│   ├── notebooks                                               # Contains the initial two-tower model code through inference (refactoring)
+│   │   └── two_towers_final_edition.ipynb                      
+│   ├── requirements.txt
+│   └── src
+│       ├── models                                              # Class definitions for the two-tower models
+│       │   └── two_towers.py
+│       └── utils                                               
+│           ├── config.py                                       # Global config variables encapsulated in a Config() class
+│           ├── dataset.py                                      # helper functions for dataset-related things / contains BookRecommenderDataset object
+│           ├── metrics.py                                      # helper functions for metric calculations 
+│           └── preprocess.py                                   # helper functions for processing any data
+├── pyproject.toml
+└── README.md
 ```

@@ -3,3 +3,4 @@
 /src/booky.egg-info
 serving/upload.sh
 .venv
+ml/data/raw/raw_dataset.csv
