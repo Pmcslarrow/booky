@@ -65,17 +65,19 @@ booky/
     ├── requirements.txt
 ```
 
-## Setup
+## Run locally!
 
-If you are testing the application locally, make sure git LFS is initialized correctly. 
-
-To initialize the python project, navigate to `booky/` and type:
+#### Inference
+1. Clone the repo (I am using git LFS for the larger files)
+2. Create a pyenv environment
 ```
-pip install -e .
+python3 -m venv .venv
 ```
-
-To run the inference function with the pretrained weights on my user profile, run:
+3. Install dependencies
 ```
-python -m src.inference.inference
+pip install -r serving/requirements.txt
 ```
-
+4. Run the inference file
+```
+python3 -m src.inference.inference  
+```
