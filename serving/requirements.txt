@@ -1,5 +1,0 @@
-fastapi
-uvicorn
-pydantic
-numpy==2.3.5
-torch==2.9.1

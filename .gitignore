@@ -2,3 +2,8 @@
 *.pyc
 /src/booky.egg-info
 serving/upload.sh
+.venv
+ml/data/
+ml/artifacts/
+ml/logs/
+events.*

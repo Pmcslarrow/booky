@@ -2,3 +2,4 @@ book_items.index filter=lfs diff=lfs merge=lfs -text
 dataset_metadata.pkl filter=lfs diff=lfs merge=lfs -text
 encoders.pkl filter=lfs diff=lfs merge=lfs -text
 user_tower.pth filter=lfs diff=lfs merge=lfs -text
+ml/artifacts/** filter=lfs diff=lfs merge=lfs -text
