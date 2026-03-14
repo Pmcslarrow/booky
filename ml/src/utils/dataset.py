@@ -58,8 +58,6 @@ class BookRecommenderDataset(Dataset):
         }
 
 
-
-
 def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoader]:
     """Takes in a Dataset object and returns a train and test dataloader
 
