@@ -1,4 +1,5 @@
 import torch
+from typing import NamedTuple
 from torch.utils.data import Dataset, DataLoader, random_split
 import pandas as pd
 
@@ -7,22 +8,15 @@ import pandas as pd
 # Item Tower -- ISBN, Book-Title, Book-Author, Publisher, Year-Of-Publication
 
 class BookRecommenderDataset(Dataset):
-    """
-    A PyTorch Dataset class for book recommendation tasks.
+    """A PyTorch Dataset class for book recommendation tasks.
 
-    Parameters
-    ----------
-    dataframe : pd.DataFrame
-        The input data containing user, item, and possibly interaction features.
+    Args:
+        Dataset (pd.DataFrame): The input data containing user, item, and possibly interaction features.
 
-    Attributes
-    ----------
-    data : pd.DataFrame
-        The processed version of the input dataframe.
-    encoders : dict
-        A dictionary mapping column names to fitted label encoders.
-    scalers : dict
-        A dictionary mapping column names to fitted scalers for numerical features.
+    Attributes:
+        data (pd.DataFrame): The processed version of the input dataframe.
+        encoders (dict): A dictionary mapping column names to fitted label encoders.
+        scalers (dict): A dictionary mapping column names to fitted scalers for numerical features.
     """
 
     def __init__(self, data: pd.DataFrame):
@@ -64,7 +58,18 @@ class BookRecommenderDataset(Dataset):
         }
 
 
-def get_dataloaders(dataset: Dataset, train_p=0.7):
+
+
+def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoader]:
+    """Takes in a Dataset object and returns a train and test dataloader
+
+    Args:
+        dataset (Dataset): BookRecommenderDataset
+        train_p (float, optional): Train split percentage. Defaults to 0.7.
+
+    Returns:
+        tuple[DataLoader, DataLoader]: train_loader, test_loader
+    """
     train_size = int(train_p * len(dataset))
     test_size = len(dataset) - train_size
     train_data, test_data = random_split(dataset, [train_size, test_size])
