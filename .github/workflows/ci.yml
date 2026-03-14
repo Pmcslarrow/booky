@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  check-pr-title:
+    name: PR Title Convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title follows conventional commits
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "PR title: $TITLE"
+          if echo "$TITLE" | grep -qE '^(fix|feat|chore):'; then
+            echo "✅ PR title is valid."
+          else
+            echo "❌ PR title must start with one of: fix:, feat:, chore:"
+            echo "   Got: $TITLE"
+            exit 1
+          fi
+
+  check-commit-messages:
+    name: Commit Message Convention
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check all commit messages follow conventional commits
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          echo "Checking commits from $BASE to $HEAD"
+          COMMITS=$(git log $BASE..$HEAD --format="%H %s")
+
+          if [ -z "$COMMITS" ]; then
+            echo "No commits found in range."
+            exit 1
+          fi
+
+          FAILED=0
+          while IFS= read -r line; do
+            SHA=$(echo "$line" | cut -d' ' -f1)
+            MSG=$(echo "$line" | cut -d' ' -f2-)
+            if echo "$MSG" | grep -qE '^(fix|feat|chore):'; then
+              echo "✅ $SHA — $MSG"
+            else
+              echo "❌ $SHA — $MSG"
+              echo "   Commit must start with one of: fix:, feat:, chore:"
+              FAILED=1
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
