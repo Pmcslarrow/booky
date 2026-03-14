@@ -35,7 +35,7 @@ class Trainer:
             lr=config.LEARNING_RATE,
             weight_decay=config.WEIGHT_DECAY
         )
-        self.writer = SummaryWriter('./logs/')
+        self.writer = SummaryWriter('./ml/logs/')
 
     def _compute_loss(self, user_embedding: torch.Tensor, item_embedding: torch.Tensor) -> torch.Tensor:
         logits = (user_embedding @ item_embedding.T) / self.config.TEMPERATURE

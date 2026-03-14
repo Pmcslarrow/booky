@@ -10,7 +10,7 @@ The model achieves approximately 31% Recall@25 on the test set across all users,
 
 ## In Development
 
-Currently developing a full-stack application for **Booky** — a platform for people to discover new books.
+Currently developing a full-stack application for **Booky** — a platform for people to discover new books. The old code for this project lives in `ml/notebooks/two_towers_final_edition.ipynb`. 
 
 - CI/CD:
     - Continuous integration (CI) with GitHub Actions (linting and tests where applicable)
@@ -32,27 +32,22 @@ Note: My full-time job takes priority over this side project, and I will do my b
 
 ```
 booky/
-├── ml                                                         
-│   ├── artifacts                                               # Saved model state
-│   │   └── models
-│   │       ├── two_towers_epoch50_test6.3_train2.38.pt
-│   │       └── user_tower.pth
-│   ├── data                                                    # Contains csv data the model uses
-│   │   ├── mocked
-│   │   │   └── fine-tuning-book-set.txt
-│   │   └── raw
-│   │       └── // git ignored
-│   ├── notebooks                                               # Contains the initial two-tower model code through inference (refactoring)
+├── ml/                                                         
+│   ├── artifacts  // git ignored                                              
+│   ├── data // git ignored                                           
+│   ├── notebooks/                                              # Contains the initial two-tower model code through inference (refactoring)
 │   │   └── two_towers_final_edition.ipynb                      
 │   ├── requirements.txt
-│   └── src
-│       ├── models                                              # Class definitions for the two-tower models
+│   └── src/
+│       ├── train.py                                            # Training functionality
+│       ├── models/                                             # Class definitions for the two-tower models
 │       │   └── two_towers.py
-│       └── utils                                               
+│       └── utils/                                               
 │           ├── config.py                                       # Global config variables encapsulated in a Config() class
-│           ├── dataset.py                                      # helper functions for dataset-related things / contains BookRecommenderDataset object
+│           ├── dataset.py                                      # helper functions for dataset-related things / contains 
 │           ├── metrics.py                                      # helper functions for metric calculations 
 │           └── preprocess.py                                   # helper functions for processing any data
 ├── pyproject.toml
+├── makefile
 └── README.md
 ```
