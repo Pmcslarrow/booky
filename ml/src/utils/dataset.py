@@ -29,11 +29,19 @@ class BookRecommenderDataset(Dataset):
         """
         Maps {key: index} pairs and StandardScaler for real valued numbers
         """
-        label_encoders = ['User-ID', 'ISBN', 'Book-Author', 'Book-Title', 'Publisher', "User-Age", "Book-Year-Of-Publication"]
+        columns = [
+            'User-ID', 
+            "User-Age", 
+            'ISBN', 
+            'Book-Author', 
+            'Book-Title', 
+            "Book-Year-Of-Publication",
+            'Publisher',
+        ]
 
-        for col in label_encoders:
+        for col in columns:
             unique_vals = self.data[col].astype(str).unique()
-            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)}
+            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)} 
             self.data[col] = self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
 
     def __len__(self):

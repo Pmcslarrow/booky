@@ -21,8 +21,6 @@ class Trainer:
                 embedding_dim=config.EMBEDDING_SIZE
             ),
             ItemTower(
-                num_isbn=config.NUM_ISBN,
-                num_titles=config.NUM_TITLES,
                 num_authors=config.NUM_AUTHORS,
                 num_publishers=config.NUM_PUBLISHERS,
                 num_year_of_publications=config.NUM_YEAR_OF_PUBLICATIONS,
@@ -102,8 +100,8 @@ if __name__ == "__main__":
     # Setup
     #
     cleaned_df = pd.read_csv('ml/data/cleaned/cleaned_dataset.csv')
-    isbn_counts = cleaned_df.groupby('ISBN').filter(lambda x: len(x) > 25) # TO REMOVE
-    cleaned_df = isbn_counts.reset_index(drop=True) # TO REMOVE
+    isbn_counts = cleaned_df.groupby('ISBN').filter(lambda x: len(x) > 25)  # TODO: REMOVE
+    cleaned_df = isbn_counts.reset_index(drop=True) # TODO: REMOVE
     
     personal_df = pd.read_csv("ml/data/personal/paul_books_subset.csv")
     df = pd.concat([cleaned_df, personal_df], ignore_index=True, sort=False)
