@@ -4,7 +4,7 @@ class Config:
 
         self.EMBEDDING_SIZE = 128
         self.EPOCHS = 50
-        self.LEARNING_RATE = 5e-4
+        self.LEARNING_RATE = 1e-3
         self.EARLY_STOPPING_PATIENCE = 15
         self.TEMPERATURE = 0.1
         self.WEIGHT_DECAY = 1e-5
