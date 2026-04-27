@@ -1,6 +1,7 @@
 import torch
 from typing import NamedTuple
 from torch.utils.data import Dataset, DataLoader, random_split
+from ml.src.utils.config import Config
 import pandas as pd
 
 
@@ -60,13 +61,13 @@ class BookRecommenderDataset(Dataset):
             "Book-Publisher": torch.tensor(row["Publisher"], dtype=torch.long),
             "Book-Year-Of-Publication": torch.tensor(row["Book-Year-Of-Publication"], dtype=torch.long),
 
-            "Book-Title-Text": row_original['Book-Title'],
-            "Book-Author-Text": row_original['Book-Author'],
-            "Book-ISBN-Text": row_original['ISBN'],
+            # "Book-Title-Text": row_original['Book-Title'],
+            # "Book-Author-Text": row_original['Book-Author'],
+            # "Book-ISBN-Text": row_original['ISBN'],
         }
 
 
-def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoader]:
+def get_dataloaders(dataset: Dataset, config: Config, train_p=0.7) -> tuple[DataLoader, DataLoader]:
     """Takes in a Dataset object and returns a train and test dataloader
 
     Args:
@@ -80,7 +81,10 @@ def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoad
     test_size = len(dataset) - train_size
     train_data, test_data = random_split(dataset, [train_size, test_size])
 
-    train_loader = DataLoader(train_data, batch_size=512, shuffle=True)
-    test_loader = DataLoader(test_data, batch_size=512, shuffle=False)
+    print("Train size (# rows): ", len(train_data))
+    print("Test size (# rows): ", len(test_data))
+
+    train_loader = DataLoader(train_data, batch_size=config.BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=config.BATCH_SIZE, shuffle=False)
     return train_loader, test_loader
 

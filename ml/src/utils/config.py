@@ -1,7 +1,8 @@
 class Config:
-    def __init__(self, dataset):
+    def __init__(self):
         self.MODEL_SAVE_PATH = 'ml/artifacts/models/batch_training'
 
+        self.BATCH_SIZE = 1024
         self.EMBEDDING_SIZE = 128
         self.EPOCHS = 50
         self.LEARNING_RATE = 1e-3
@@ -9,6 +10,7 @@ class Config:
         self.TEMPERATURE = 0.1
         self.WEIGHT_DECAY = 1e-5
 
+    def set_encoder_lengths(self, dataset):
         self.NUM_USERS = len(dataset.encoders['User-ID']) + 1
         self.NUM_AGES = len(dataset.encoders['User-Age']) + 1
         self.NUM_ISBN = len(dataset.encoders['ISBN']) + 1
