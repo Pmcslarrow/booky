@@ -67,7 +67,7 @@ class BookRecommenderDataset(Dataset):
         }
 
 
-def get_dataloaders(dataset: Dataset, config: Config, train_p=0.7) -> tuple[DataLoader, DataLoader]:
+def get_dataloaders(dataset: Dataset, batch_size, train_p=0.7) -> tuple[DataLoader, DataLoader]:
     """Takes in a Dataset object and returns a train and test dataloader
 
     Args:
@@ -84,7 +84,7 @@ def get_dataloaders(dataset: Dataset, config: Config, train_p=0.7) -> tuple[Data
     print("Train size (# rows): ", len(train_data))
     print("Test size (# rows): ", len(test_data))
 
-    train_loader = DataLoader(train_data, batch_size=config.BATCH_SIZE, shuffle=True)
-    test_loader = DataLoader(test_data, batch_size=config.BATCH_SIZE, shuffle=False)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 

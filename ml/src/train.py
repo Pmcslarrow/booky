@@ -1,10 +1,9 @@
-import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
-from ml.src.utils.dataset import BookRecommenderDataset, get_dataloaders
 from ml.src.utils.config import Config
 from ml.src.models.two_towers import UserTower, ItemTower, TwoTowers
+from ml.src.utils.setup import Setup
 
 class Trainer:
     def __init__(self, config: Config, train_loader: DataLoader, test_loader: DataLoader):
@@ -78,24 +77,7 @@ class Trainer:
         print("Training complete.")
 
 if __name__ == "__main__":
-    print("Starting train.py...")
-    config = Config()  
-
-    #
-    # Setup
-    #
-    cleaned_df = pd.read_csv('ml/data/cleaned/cleaned_dataset.csv')
-    isbn_counts = cleaned_df.groupby('ISBN').filter(lambda x: len(x) > 25)  # TODO: REMOVE
-    cleaned_df = isbn_counts.reset_index(drop=True) # TODO: REMOVE
-    
-    personal_df = pd.read_csv("ml/data/personal/paul_books_subset.csv")
-    df = pd.concat([cleaned_df, personal_df], ignore_index=True, sort=False)
-    book_recommender_dataset = BookRecommenderDataset(df)
-    config.set_encoder_lengths(book_recommender_dataset)
-    train_loader, test_loader = get_dataloaders(book_recommender_dataset, config)
-
-    print(config)
-
+    book_recommender_dataset, config, two_towers, metric, train_loader, test_loader = Setup()
 
     #
     # Starting training
