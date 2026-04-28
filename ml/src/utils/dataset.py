@@ -1,6 +1,7 @@
 import torch
 from typing import NamedTuple
 from torch.utils.data import Dataset, DataLoader, random_split
+from ml.src.utils.config import Config
 import pandas as pd
 
 
@@ -29,11 +30,19 @@ class BookRecommenderDataset(Dataset):
         """
         Maps {key: index} pairs and StandardScaler for real valued numbers
         """
-        label_encoders = ['User-ID', 'ISBN', 'Book-Author', 'Book-Title', 'Publisher', "User-Age", "Book-Year-Of-Publication"]
+        columns = [
+            'User-ID', 
+            "User-Age", 
+            'ISBN', 
+            'Book-Author', 
+            'Book-Title', 
+            "Book-Year-Of-Publication",
+            'Publisher',
+        ]
 
-        for col in label_encoders:
+        for col in columns:
             unique_vals = self.data[col].astype(str).unique()
-            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)}
+            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)} 
             self.data[col] = self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
 
     def __len__(self):
@@ -52,13 +61,13 @@ class BookRecommenderDataset(Dataset):
             "Book-Publisher": torch.tensor(row["Publisher"], dtype=torch.long),
             "Book-Year-Of-Publication": torch.tensor(row["Book-Year-Of-Publication"], dtype=torch.long),
 
-            "Book-Title-Text": row_original['Book-Title'],
-            "Book-Author-Text": row_original['Book-Author'],
-            "Book-ISBN-Text": row_original['ISBN'],
+            # "Book-Title-Text": row_original['Book-Title'],
+            # "Book-Author-Text": row_original['Book-Author'],
+            # "Book-ISBN-Text": row_original['ISBN'],
         }
 
 
-def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoader]:
+def get_dataloaders(dataset: Dataset, batch_size, train_p=0.7) -> tuple[DataLoader, DataLoader]:
     """Takes in a Dataset object and returns a train and test dataloader
 
     Args:
@@ -72,7 +81,10 @@ def get_dataloaders(dataset: Dataset, train_p=0.7) -> tuple[DataLoader, DataLoad
     test_size = len(dataset) - train_size
     train_data, test_data = random_split(dataset, [train_size, test_size])
 
-    train_loader = DataLoader(train_data, batch_size=512, shuffle=True)
-    test_loader = DataLoader(test_data, batch_size=512, shuffle=False)
+    print("Train size (# rows): ", len(train_data))
+    print("Test size (# rows): ", len(test_data))
+
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
 

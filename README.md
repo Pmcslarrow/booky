@@ -51,3 +51,7 @@ booky/
 ├── makefile
 └── README.md
 ```
+
+## Booky Design
+
+<img src="ml/booky_recommender.png" width="750px">
