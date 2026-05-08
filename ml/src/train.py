@@ -77,7 +77,7 @@ class Trainer:
         print("Training complete.")
 
 if __name__ == "__main__":
-    book_recommender_dataset, config, two_towers, metric, train_loader, test_loader = Setup()
+    book_recommender_dataset, config, two_towers, train_loader, test_loader = Setup()
 
     #
     # Starting training
