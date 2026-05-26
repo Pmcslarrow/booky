@@ -8,6 +8,7 @@ import pandas as pd
 # User Tower -- User-ID, Age
 # Item Tower -- ISBN, Book-Title, Book-Author, Publisher, Year-Of-Publication
 
+
 class BookRecommenderDataset(Dataset):
     """A PyTorch Dataset class for book recommendation tasks.
 
@@ -21,7 +22,7 @@ class BookRecommenderDataset(Dataset):
     """
 
     def __init__(self, data: pd.DataFrame):
-        self.encoders = {} # {'Column name': {'value': idx, ...}, ...}
+        self.encoders = {}  # {'Column name': {'value': idx, ...}, ...}
         self.data = data.copy()
         self.original_data = data.copy()
         self.encode_information()
@@ -31,19 +32,21 @@ class BookRecommenderDataset(Dataset):
         Maps {key: index} pairs and StandardScaler for real valued numbers
         """
         columns = [
-            'User-ID', 
-            "User-Age", 
-            'ISBN', 
-            'Book-Author', 
-            'Book-Title', 
+            "User-ID",
+            "User-Age",
+            "ISBN",
+            "Book-Author",
+            "Book-Title",
             "Book-Year-Of-Publication",
-            'Publisher',
+            "Publisher",
         ]
 
         for col in columns:
-            unique_vals = self.data[col].astype(str).unique()
-            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)} 
-            self.data[col] = self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
+            unique_vals = sorted(self.data[col].astype(str).unique())
+            self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)}
+            self.data[col] = (
+                self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
+            )
 
     def __len__(self):
         return len(self.data)
@@ -59,15 +62,18 @@ class BookRecommenderDataset(Dataset):
             "Book-Title": torch.tensor(row["Book-Title"], dtype=torch.long),
             "Book-Author": torch.tensor(row["Book-Author"], dtype=torch.long),
             "Book-Publisher": torch.tensor(row["Publisher"], dtype=torch.long),
-            "Book-Year-Of-Publication": torch.tensor(row["Book-Year-Of-Publication"], dtype=torch.long),
-
+            "Book-Year-Of-Publication": torch.tensor(
+                row["Book-Year-Of-Publication"], dtype=torch.long
+            ),
             # "Book-Title-Text": row_original['Book-Title'],
             # "Book-Author-Text": row_original['Book-Author'],
             # "Book-ISBN-Text": row_original['ISBN'],
         }
 
 
-def get_dataloaders(dataset: Dataset, batch_size, train_p=0.7) -> tuple[DataLoader, DataLoader]:
+def get_dataloaders(
+    dataset: Dataset, batch_size, train_p=0.7
+) -> tuple[DataLoader, DataLoader]:
     """Takes in a Dataset object and returns a train and test dataloader
 
     Args:
@@ -87,4 +93,3 @@ def get_dataloaders(dataset: Dataset, batch_size, train_p=0.7) -> tuple[DataLoad
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
-

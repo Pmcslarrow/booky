@@ -1,5 +1,7 @@
 import torch
 import torch.nn.functional as F
+import pickle
+from pathlib import Path
 from torch.utils.data import DataLoader
 from ml.src.utils.config import Config
 from ml.src.models.two_towers import UserTower, ItemTower, TwoTowers
@@ -8,12 +10,17 @@ from ml.src.utils.setup import Setup
 
 class Trainer:
     def __init__(
-        self, config: Config, train_loader: DataLoader, test_loader: DataLoader
+        self,
+        config: Config,
+        train_loader: DataLoader,
+        test_loader: DataLoader,
+        encoders: dict,
     ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = config
         self.train_loader = train_loader
         self.test_loader = test_loader
+        self.encoders = encoders
         # self.EarlyStopping = EarlyStopping() TODO: Implement an early stopping class
         # self.Writer = Writer() TODO: Implement a custom writer class
 
@@ -68,7 +75,13 @@ class Trainer:
     def _save_checkpoint(self, epoch: int, avg_train_loss: float, avg_test_loss: float):
         path = f"./{self.config.MODEL_SAVE_PATH}/two_towers_epoch{epoch}_test{avg_test_loss:.2f}_train{avg_train_loss:.2f}.pt"
         torch.save(self.two_towers.state_dict(), path)
+
+        encoder_path = path.replace(".pt", "_encoders.pkl")
+        with open(encoder_path, "wb") as f:
+            pickle.dump(self.encoders, f)
+
         print(f"  Checkpoint saved: {path}")
+        print(f"  Encoders saved: {encoder_path}")
 
     def batch_train(self):
         for epoch in range(1, self.config.EPOCHS + 1):
@@ -91,5 +104,7 @@ if __name__ == "__main__":
     #
     # Starting training
     #
-    trainer = Trainer(config, train_loader, test_loader)
+    trainer = Trainer(
+        config, train_loader, test_loader, book_recommender_dataset.encoders
+    )
     trainer.batch_train()

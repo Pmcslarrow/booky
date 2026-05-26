@@ -1,5 +1,6 @@
 import os
 import re
+import pickle
 import torch
 import pandas as pd
 from ml.src.models.two_towers import TwoTowers, UserTower, ItemTower
@@ -68,6 +69,15 @@ def Setup(test=False):
             checkpoint = torch.load(trained_model_path, map_location="cpu")
             two_towers.load_state_dict(checkpoint)
             print(f"Resuming from checkpoint: {trained_model_path}")
+
+            encoder_path = trained_model_path.replace(".pt", "_encoders.pkl")
+            if os.path.exists(encoder_path):
+                with open(encoder_path, "rb") as f:
+                    saved_encoders = pickle.load(f)
+                book_recommender_dataset.encoders = saved_encoders
+                print(f"Loaded encoders from: {encoder_path}")
+            else:
+                print(f"Warning: Encoder file not found at {encoder_path}")
         else:
             print("No checkpoint found, starting from scratch.")
     except Exception as e:
