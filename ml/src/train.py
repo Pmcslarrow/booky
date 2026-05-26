@@ -15,6 +15,7 @@ class Trainer:
         train_loader: DataLoader,
         test_loader: DataLoader,
         encoders: dict,
+        interaction_set: frozenset,
     ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = config
@@ -39,6 +40,8 @@ class Trainer:
             ),
         ).to(self.device)
 
+        self.interaction_set = interaction_set
+
         self.optimizer = torch.optim.Adam(
             self.two_towers.parameters(),
             lr=config.LEARNING_RATE,
@@ -46,10 +49,27 @@ class Trainer:
         )
 
     def _compute_loss(
-        self, user_embedding: torch.Tensor, item_embedding: torch.Tensor
+        self,
+        user_embedding: torch.Tensor,
+        item_embedding: torch.Tensor,
+        user_ids: torch.Tensor,
+        isbn_ids: torch.Tensor,
     ) -> torch.Tensor:
+        B = user_embedding.size(0)
         logits = (user_embedding @ item_embedding.T) / self.config.TEMPERATURE
-        labels = torch.arange(user_embedding.size(0)).to(self.device)
+
+        # Mask off-diagonal entries that are known (user, isbn) interactions so
+        # they are not penalised as false negatives during contrastive learning.
+        mask = torch.zeros(B, B, dtype=torch.bool, device=self.device)
+        ui = user_ids.tolist()
+        ii = isbn_ids.tolist()
+        for i in range(B):
+            for j in range(B):
+                if i != j and (ui[i], ii[j]) in self.interaction_set:
+                    mask[i, j] = True
+        logits = logits.masked_fill(mask, float("-inf"))
+
+        labels = torch.arange(B, device=self.device)
         return F.cross_entropy(logits, labels)
 
     def _run_epoch(self, loader: DataLoader, train: bool) -> float:
@@ -62,7 +82,12 @@ class Trainer:
                     self.optimizer.zero_grad()
 
                 user_embedding, item_embedding = self.two_towers(batch)
-                loss = self._compute_loss(user_embedding, item_embedding)
+                loss = self._compute_loss(
+                    user_embedding,
+                    item_embedding,
+                    batch["User-ID"].to(self.device),
+                    batch["Book-ISBN"].to(self.device),
+                )
 
                 if train:
                     loss.backward()
@@ -105,6 +130,10 @@ if __name__ == "__main__":
     # Starting training
     #
     trainer = Trainer(
-        config, train_loader, test_loader, book_recommender_dataset.encoders
+        config,
+        train_loader,
+        test_loader,
+        book_recommender_dataset.encoders,
+        book_recommender_dataset.interaction_set,
     )
     trainer.batch_train()

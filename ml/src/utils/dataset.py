@@ -48,6 +48,11 @@ class BookRecommenderDataset(Dataset):
                 self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
             )
 
+    @property
+    def interaction_set(self) -> frozenset:
+        """All (encoded_user_id, encoded_isbn) pairs in the dataset."""
+        return frozenset(zip(self.data["User-ID"].tolist(), self.data["ISBN"].tolist()))
+
     def __len__(self):
         return len(self.data)
 
