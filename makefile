@@ -5,3 +5,6 @@ train:
 test: 
 	pip install -r ml/requirements.txt 
 	python -m ml.src.test
+
+format:
+	ruff format .

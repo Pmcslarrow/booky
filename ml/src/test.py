@@ -7,7 +7,9 @@ from ml.src.utils.metrics import Metrics
 from ml.src.utils.setup import Setup
 
 if __name__ == "__main__":
-    book_recommender_dataset, config, two_towers, train_loader, test_loader = Setup(test=True)
+    book_recommender_dataset, config, two_towers, train_loader, test_loader = Setup(
+        test=True
+    )
 
     #
     # Getting all item embeddings
@@ -22,18 +24,18 @@ if __name__ == "__main__":
         for i, batch in enumerate(test_loader):
             item_embedding = two_towers.item_tower.get_embedding(batch)
             all_item_embeddings[i] = item_embedding.squeeze(0)
-            idx_to_isbn.append(batch['Book-ISBN'][0])
-    print("All item embeddings: ", all_item_embeddings.shape) 
+            idx_to_isbn.append(batch["Book-ISBN"][0])
+    print("All item embeddings: ", all_item_embeddings.shape)
     print("ISBN mapping size: ", len(idx_to_isbn))
 
     #
     # Initializing Metric object
     #
     metric = Metrics(
-        book_recommender_dataset, 
-        all_item_embeddings, 
-        two_towers.user_tower, 
+        book_recommender_dataset,
+        all_item_embeddings,
+        two_towers.user_tower,
         test_loader,
-        idx_to_isbn
+        idx_to_isbn,
     )
     metric.hit_rate_at_k(k=20)

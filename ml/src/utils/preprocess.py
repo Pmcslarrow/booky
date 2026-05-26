@@ -8,7 +8,8 @@ def bucketize_age(age: int):
     elif age <= 50:
         return "36-50"
     else:
-        return"50+"
+        return "50+"
+
 
 def bucketize_year_of_publication(year_of_publication: int):
     if year_of_publication < 1950:
@@ -23,4 +24,3 @@ def bucketize_year_of_publication(year_of_publication: int):
         return "2010-2019"
     else:
         return "2020+"
-    
