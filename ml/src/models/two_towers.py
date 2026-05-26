@@ -18,9 +18,9 @@ class UserTower(nn.Module):
 
         user_embedding_dim = 128    
         age_embedding_dim = 4   
-        linear_in = age_embedding_dim
+        linear_in = user_embedding_dim + age_embedding_dim
 
-        self.user_embedding = nn.Embedding(num_users, user_embedding_dim, padding_idx=0)
+        self.user_id_embedding = nn.Embedding(num_users, user_embedding_dim, padding_idx=0)
         self.user_age_embedding = nn.Embedding(num_ages, age_embedding_dim, padding_idx=0)
 
         self.user_mlp = nn.Sequential(
@@ -31,8 +31,9 @@ class UserTower(nn.Module):
         )
 
     def forward(self, user_id, age):
+        user_emb = self.user_id_embedding(user_id)
         age_emb = self.user_age_embedding(age)
-        x = torch.cat([age_emb], dim=1)
+        x = torch.cat([user_emb, age_emb], dim=1)
         return self.user_mlp(x)
 
     def get_embedding(self, data):

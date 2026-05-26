@@ -57,12 +57,16 @@ def Setup(test=False):
             embedding_dim=config.EMBEDDING_SIZE
         )
     )
-    if trained_model_path:
-        checkpoint = torch.load(trained_model_path, map_location='cpu')
-        two_towers.load_state_dict(checkpoint)
-        print(f"Resuming from checkpoint: {trained_model_path}")
-    else:
-        print("No checkpoint found, starting from scratch.")
+    
+    try: 
+        if trained_model_path:
+            checkpoint = torch.load(trained_model_path, map_location='cpu')
+            two_towers.load_state_dict(checkpoint)
+            print(f"Resuming from checkpoint: {trained_model_path}")
+        else:
+            print("No checkpoint found, starting from scratch.")
+    except:
+        print("Failed to import model params... Starting from scratch")
 
     return (
         book_recommender_dataset, 
