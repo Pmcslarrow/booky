@@ -1,8 +1,9 @@
 import torch
 from typing import NamedTuple
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset, DataLoader, Subset
 from ml.src.utils.config import Config
 import pandas as pd
+import numpy as np
 
 
 # User Tower -- User-ID, Age
@@ -79,7 +80,9 @@ class BookRecommenderDataset(Dataset):
 def get_dataloaders(
     dataset: Dataset, batch_size, train_p=0.7
 ) -> tuple[DataLoader, DataLoader]:
-    """Takes in a Dataset object and returns a train and test dataloader
+    """Split dataset by user-ID to prevent data leakage.
+
+    All interactions from a held-out user go to test; none to train.
 
     Args:
         dataset (Dataset): BookRecommenderDataset
@@ -88,12 +91,26 @@ def get_dataloaders(
     Returns:
         tuple[DataLoader, DataLoader]: train_loader, test_loader
     """
-    train_size = int(train_p * len(dataset))
-    test_size = len(dataset) - train_size
-    train_data, test_data = random_split(dataset, [train_size, test_size])
+    user_ids = dataset.data["User-ID"].unique()
+    np.random.shuffle(user_ids)
+
+    train_user_count = int(train_p * len(user_ids))
+    train_users = set(user_ids[:train_user_count])
+    test_users = set(user_ids[train_user_count:])
+
+    train_indices = [
+        i for i, row in dataset.data.iterrows() if row["User-ID"] in train_users
+    ]
+    test_indices = [
+        i for i, row in dataset.data.iterrows() if row["User-ID"] in test_users
+    ]
+
+    train_data = Subset(dataset, train_indices)
+    test_data = Subset(dataset, test_indices)
 
     print("Train size (# rows): ", len(train_data))
     print("Test size (# rows): ", len(test_data))
+    print(f"Train users: {len(train_users)}, Test users: {len(test_users)}")
 
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
