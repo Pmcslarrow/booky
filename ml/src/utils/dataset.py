@@ -22,11 +22,15 @@ class BookRecommenderDataset(Dataset):
         scalers (dict): A dictionary mapping column names to fitted scalers for numerical features.
     """
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame, encoders: dict | None = None):
         self.encoders = {}  # {'Column name': {'value': idx, ...}, ...}
         self.data = data.copy()
         self.original_data = data.copy()
-        self.encode_information()
+        if encoders is not None:
+            self.encoders = encoders
+            self._apply_encoders()
+        else:
+            self.encode_information()
 
     def encode_information(self):
         """
@@ -43,8 +47,26 @@ class BookRecommenderDataset(Dataset):
         ]
 
         for col in columns:
-            unique_vals = sorted(self.data[col].astype(str).unique())
+            # Drop NaN values and convert to string, then sort
+            col_values = self.data[col].dropna().astype(str)
+            unique_vals = sorted(col_values.unique())
             self.encoders[col] = {val: idx + 1 for idx, val in enumerate(unique_vals)}
+            self.data[col] = (
+                self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
+            )
+
+    def _apply_encoders(self):
+        """Apply pre-built encoders without re-fitting."""
+        columns = [
+            "User-ID",
+            "User-Age",
+            "ISBN",
+            "Book-Author",
+            "Book-Title",
+            "Book-Year-Of-Publication",
+            "Publisher",
+        ]
+        for col in columns:
             self.data[col] = (
                 self.data[col].astype(str).map(self.encoders[col]).fillna(0).astype(int)
             )
@@ -115,3 +137,18 @@ def get_dataloaders(
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
     return train_loader, test_loader
+
+
+def get_finetune_loader(dataset: Dataset, batch_size: int) -> DataLoader:
+    """Return a DataLoader over all rows for fine-tuning on a small personal dataset.
+
+    No train/test split needed for fine-tuning on a small dataset like Paul's 13 rows.
+
+    Args:
+        dataset (Dataset): BookRecommenderDataset
+        batch_size (int): Batch size for fine-tuning (typically all rows at once)
+
+    Returns:
+        DataLoader: Fine-tune loader
+    """
+    return DataLoader(dataset, batch_size=batch_size, shuffle=True)

@@ -10,6 +10,11 @@ class Config:
         self.TEMPERATURE = 0.1
         self.WEIGHT_DECAY = 1e-5
 
+        # Fine-tuning hyperparameters
+        self.FINETUNE_EPOCHS = 20
+        self.FINETUNE_LEARNING_RATE = 1e-4
+        self.FINETUNE_BATCH_SIZE = 13
+
     def set_encoder_lengths(self, dataset):
         self.NUM_USERS = len(dataset.encoders["User-ID"]) + 1
         self.NUM_AGES = len(dataset.encoders["User-Age"]) + 1
@@ -29,6 +34,9 @@ class Config:
             f"EARLY_STOPPING_PATIENCE: {self.EARLY_STOPPING_PATIENCE}\n"
             f"TEMPERATURE: {self.TEMPERATURE}\n"
             f"WEIGHT_DECAY: {self.WEIGHT_DECAY}\n"
+            f"FINETUNE_EPOCHS: {self.FINETUNE_EPOCHS}\n"
+            f"FINETUNE_LEARNING_RATE: {self.FINETUNE_LEARNING_RATE}\n"
+            f"FINETUNE_BATCH_SIZE: {self.FINETUNE_BATCH_SIZE}\n"
             f"NUM_USERS: {self.NUM_USERS}\n"
             f"NUM_AGES: {self.NUM_AGES}\n"
             f"NUM_ISBN: {self.NUM_ISBN}\n"

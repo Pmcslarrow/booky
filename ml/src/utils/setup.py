@@ -3,9 +3,26 @@ import re
 import pickle
 import torch
 import pandas as pd
+from typing import NamedTuple
 from ml.src.models.two_towers import TwoTowers, UserTower, ItemTower
-from ml.src.utils.dataset import BookRecommenderDataset, get_dataloaders
+from ml.src.utils.dataset import (
+    BookRecommenderDataset,
+    get_dataloaders,
+    get_finetune_loader,
+)
 from ml.src.utils.config import Config
+
+
+class SetupResult(NamedTuple):
+    """Result of Setup() containing all datasets, loaders, config, and model."""
+
+    dataset: BookRecommenderDataset  # pretrain dataset (main only)
+    finetune_dataset: BookRecommenderDataset  # fine-tune dataset (Paul only)
+    config: Config
+    two_towers: TwoTowers
+    train_loader: torch.utils.data.DataLoader
+    test_loader: torch.utils.data.DataLoader
+    finetune_loader: torch.utils.data.DataLoader
 
 
 def Setup(test=False):
@@ -13,26 +30,37 @@ def Setup(test=False):
     config = Config()
 
     #
-    # Setup
+    # Setup: Load datasets
     #
     cleaned_df = pd.read_csv("ml/data/cleaned/cleaned_dataset.csv")
     # isbn_counts = cleaned_df.groupby('ISBN').filter(lambda x: len(x) > 10)  # TODO: REMOVE
     # cleaned_df = isbn_counts.reset_index(drop=True) # TODO: REMOVE
 
     personal_df = pd.read_csv("ml/data/personal/paul_books_subset.csv")
-    df = pd.concat([cleaned_df, personal_df], ignore_index=True, sort=False)
-    book_recommender_dataset = BookRecommenderDataset(df)
-    config.set_encoder_lengths(book_recommender_dataset)
+
+    # Fit encoders on the combined dataset so Paul's User-ID and ISBNs get valid slots
+    combined_df = pd.concat([cleaned_df, personal_df], ignore_index=True, sort=False)
+    combined_dataset = BookRecommenderDataset(combined_df)
+    config.set_encoder_lengths(combined_dataset)
+
+    # Create pretrain dataset using only main data but with combined-vocab encoders
+    pretrain_dataset = BookRecommenderDataset(
+        cleaned_df, encoders=combined_dataset.encoders
+    )
+
+    # Create Paul's fine-tune dataset using same encoders
+    finetune_dataset = BookRecommenderDataset(
+        personal_df, encoders=combined_dataset.encoders
+    )
 
     batch_size = 1 if test else config.BATCH_SIZE
-    train_loader, test_loader = get_dataloaders(
-        book_recommender_dataset, batch_size=batch_size
-    )
+    train_loader, test_loader = get_dataloaders(pretrain_dataset, batch_size=batch_size)
+    finetune_loader = get_finetune_loader(finetune_dataset, config.FINETUNE_BATCH_SIZE)
 
     print(config)
 
     #
-    # Starting testing
+    # Checkpoint resumption
     #
     list_dir = os.listdir("ml/artifacts/models/batch_training/")
     trained_model_path = None
@@ -74,7 +102,11 @@ def Setup(test=False):
             if os.path.exists(encoder_path):
                 with open(encoder_path, "rb") as f:
                     saved_encoders = pickle.load(f)
-                book_recommender_dataset.encoders = saved_encoders
+                # Apply saved encoders to both datasets
+                pretrain_dataset.encoders = saved_encoders
+                finetune_dataset.encoders = saved_encoders
+                pretrain_dataset._apply_encoders()
+                finetune_dataset._apply_encoders()
                 print(f"Loaded encoders from: {encoder_path}")
             else:
                 print(f"Warning: Encoder file not found at {encoder_path}")
@@ -83,4 +115,12 @@ def Setup(test=False):
     except Exception as e:
         print("Error loading model weights: ", e)
 
-    return (book_recommender_dataset, config, two_towers, train_loader, test_loader)
+    return SetupResult(
+        dataset=pretrain_dataset,
+        finetune_dataset=finetune_dataset,
+        config=config,
+        two_towers=two_towers,
+        train_loader=train_loader,
+        test_loader=test_loader,
+        finetune_loader=finetune_loader,
+    )

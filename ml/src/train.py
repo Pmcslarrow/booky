@@ -16,12 +16,16 @@ class Trainer:
         test_loader: DataLoader,
         encoders: dict,
         interaction_set: frozenset,
+        finetune_loader: DataLoader | None = None,
+        finetune_interaction_set: frozenset | None = None,
     ):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.config = config
         self.train_loader = train_loader
         self.test_loader = test_loader
         self.encoders = encoders
+        self.finetune_loader = finetune_loader
+        self.finetune_interaction_set = finetune_interaction_set or frozenset()
         # self.EarlyStopping = EarlyStopping() TODO: Implement an early stopping class
         # self.Writer = Writer() TODO: Implement a custom writer class
 
@@ -97,8 +101,14 @@ class Trainer:
 
         return running_loss / len(loader)
 
-    def _save_checkpoint(self, epoch: int, avg_train_loss: float, avg_test_loss: float):
-        path = f"./{self.config.MODEL_SAVE_PATH}/two_towers_epoch{epoch}_test{avg_test_loss:.2f}_train{avg_train_loss:.2f}.pt"
+    def _save_checkpoint(
+        self,
+        epoch: int,
+        avg_train_loss: float,
+        avg_test_loss: float,
+        suffix: str = "",
+    ):
+        path = f"./{self.config.MODEL_SAVE_PATH}/two_towers_epoch{epoch}_test{avg_test_loss:.2f}_train{avg_train_loss:.2f}{suffix}.pt"
         torch.save(self.two_towers.state_dict(), path)
 
         encoder_path = path.replace(".pt", "_encoders.pkl")
@@ -122,18 +132,60 @@ class Trainer:
 
         print("Training complete.")
 
+    def finetune(self):
+        """Fine-tune the pretrained model on Paul's personal data."""
+        if self.finetune_loader is None:
+            raise ValueError("finetune_loader was not provided to Trainer")
+
+        # Create a new optimizer with lower learning rate for fine-tuning
+        finetune_optimizer = torch.optim.Adam(
+            self.two_towers.parameters(),
+            lr=self.config.FINETUNE_LEARNING_RATE,
+            weight_decay=self.config.WEIGHT_DECAY,
+        )
+
+        # Temporarily swap optimizer and interaction_set for fine-tune phase
+        orig_optimizer = self.optimizer
+        orig_interaction_set = self.interaction_set
+        self.optimizer = finetune_optimizer
+        self.interaction_set = self.finetune_interaction_set
+
+        print("\nStarting fine-tuning on Paul's data...")
+        avg_loss = 0.0
+        for epoch in range(1, self.config.FINETUNE_EPOCHS + 1):
+            avg_loss = self._run_epoch(self.finetune_loader, train=True)
+            print(
+                f"  Finetune Epoch {epoch}/{self.config.FINETUNE_EPOCHS} | Loss: {avg_loss:.4f}"
+            )
+
+        self._save_checkpoint(
+            self.config.FINETUNE_EPOCHS, avg_loss, 0.0, suffix="_finetuned"
+        )
+
+        # Restore original state
+        self.optimizer = orig_optimizer
+        self.interaction_set = orig_interaction_set
+        print("Fine-tuning complete.")
+
 
 if __name__ == "__main__":
-    book_recommender_dataset, config, two_towers, train_loader, test_loader = Setup()
+    result = Setup()
 
     #
     # Starting training
     #
     trainer = Trainer(
-        config,
-        train_loader,
-        test_loader,
-        book_recommender_dataset.encoders,
-        book_recommender_dataset.interaction_set,
+        result.config,
+        result.train_loader,
+        result.test_loader,
+        result.dataset.encoders,
+        result.dataset.interaction_set,
+        finetune_loader=result.finetune_loader,
+        finetune_interaction_set=result.finetune_dataset.interaction_set,
     )
+
+    # Phase 1: Pretrain on main dataset
     trainer.batch_train()
+
+    # Phase 2: Fine-tune on Paul's data
+    trainer.finetune()
