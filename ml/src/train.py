@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
 import pickle
-from pathlib import Path
 from torch.utils.data import DataLoader
 from ml.src.utils.config import Config
 from ml.src.models.two_towers import UserTower, ItemTower, TwoTowers

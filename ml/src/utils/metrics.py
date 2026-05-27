@@ -1,8 +1,6 @@
 import torch
-import torch.nn as nn
 import numpy as np
-import random
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from ml.src.models.two_towers import UserTower
 from ml.src.utils.dataset import BookRecommenderDataset
 from ml.src.utils.config import Config

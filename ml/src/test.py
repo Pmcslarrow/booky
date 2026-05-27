@@ -1,8 +1,4 @@
-import pandas as pd
 import torch
-from ml.src.models.two_towers import TwoTowers, UserTower, ItemTower
-from ml.src.utils.dataset import BookRecommenderDataset, get_dataloaders
-from ml.src.utils.config import Config
 from ml.src.utils.metrics import Metrics
 from ml.src.utils.setup import Setup
 
