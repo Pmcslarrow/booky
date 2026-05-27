@@ -1,7 +1,5 @@
 import torch
-from typing import NamedTuple
 from torch.utils.data import Dataset, DataLoader, Subset
-from ml.src.utils.config import Config
 import pandas as pd
 import numpy as np
 
@@ -81,7 +79,7 @@ class BookRecommenderDataset(Dataset):
 
     def __getitem__(self, idx: int):
         row = self.data.iloc[idx]
-        row_original = self.original_data.iloc[idx]
+        # row_original = self.original_data.iloc[idx]
 
         return {
             "User-ID": torch.tensor(row["User-ID"], dtype=torch.long),

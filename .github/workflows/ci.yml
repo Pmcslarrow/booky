@@ -5,6 +5,27 @@ on:
     types: [opened, edited, synchronize, reopened]
 
 jobs:
+  lint:
+    name: Ruff Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Run ruff check
+        run: ruff check .
+
+      - name: Run ruff format check
+        run: ruff format --check .
+
   check-pr-title:
     name: PR Title Convention
     runs-on: ubuntu-latest
