@@ -1,6 +1,6 @@
 class Config:
     def __init__(self):
-        self.MODEL_SAVE_PATH = 'ml/artifacts/models/batch_training'
+        self.MODEL_SAVE_PATH = "ml/artifacts/models/batch_training"
 
         self.BATCH_SIZE = 1024
         self.EMBEDDING_SIZE = 128
@@ -10,14 +10,21 @@ class Config:
         self.TEMPERATURE = 0.1
         self.WEIGHT_DECAY = 1e-5
 
+        # Fine-tuning hyperparameters
+        self.FINETUNE_EPOCHS = 20
+        self.FINETUNE_LEARNING_RATE = 1e-4
+        self.FINETUNE_BATCH_SIZE = 13
+
     def set_encoder_lengths(self, dataset):
-        self.NUM_USERS = len(dataset.encoders['User-ID']) + 1
-        self.NUM_AGES = len(dataset.encoders['User-Age']) + 1
-        self.NUM_ISBN = len(dataset.encoders['ISBN']) + 1
-        self.NUM_TITLES = len(dataset.encoders['Book-Title']) + 1
-        self.NUM_AUTHORS = len(dataset.encoders['Book-Author']) + 1
-        self.NUM_PUBLISHERS = len(dataset.encoders['Publisher']) + 1
-        self.NUM_YEAR_OF_PUBLICATIONS = len(dataset.encoders['Book-Year-Of-Publication']) + 1
+        self.NUM_USERS = len(dataset.encoders["User-ID"]) + 1
+        self.NUM_AGES = len(dataset.encoders["User-Age"]) + 1
+        self.NUM_ISBN = len(dataset.encoders["ISBN"]) + 1
+        self.NUM_TITLES = len(dataset.encoders["Book-Title"]) + 1
+        self.NUM_AUTHORS = len(dataset.encoders["Book-Author"]) + 1
+        self.NUM_PUBLISHERS = len(dataset.encoders["Publisher"]) + 1
+        self.NUM_YEAR_OF_PUBLICATIONS = (
+            len(dataset.encoders["Book-Year-Of-Publication"]) + 1
+        )
 
     def __str__(self):
         return (
@@ -27,6 +34,9 @@ class Config:
             f"EARLY_STOPPING_PATIENCE: {self.EARLY_STOPPING_PATIENCE}\n"
             f"TEMPERATURE: {self.TEMPERATURE}\n"
             f"WEIGHT_DECAY: {self.WEIGHT_DECAY}\n"
+            f"FINETUNE_EPOCHS: {self.FINETUNE_EPOCHS}\n"
+            f"FINETUNE_LEARNING_RATE: {self.FINETUNE_LEARNING_RATE}\n"
+            f"FINETUNE_BATCH_SIZE: {self.FINETUNE_BATCH_SIZE}\n"
             f"NUM_USERS: {self.NUM_USERS}\n"
             f"NUM_AGES: {self.NUM_AGES}\n"
             f"NUM_ISBN: {self.NUM_ISBN}\n"
@@ -34,7 +44,4 @@ class Config:
             f"NUM_AUTHORS: {self.NUM_AUTHORS}\n"
             f"NUM_PUBLISHERS: {self.NUM_PUBLISHERS}\n"
             f"NUM_YEAR_OF_PUBLICATIONS: {self.NUM_YEAR_OF_PUBLICATIONS}"
-        )      
-
-
-
+        )
