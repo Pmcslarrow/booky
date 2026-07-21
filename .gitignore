@@ -8,3 +8,5 @@ ml/artifacts/
 ml/logs/
 events.*
 amazon-books/data/
+*.pth
+*.pkl
