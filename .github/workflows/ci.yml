@@ -5,29 +5,26 @@ on:
     types: [opened, edited, synchronize, reopened]
 
 jobs:
-  lint:
-    name: Ruff Linter
+  python-lint:
+    name: Ruff Linter (Backend)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install & Run Ruff
+        run: |
+          pip install ruff
+          ruff check .
+          ruff format --check .
 
-      - name: Run ruff check
-        run: ruff check .
-
-      - name: Run ruff format check
-        run: ruff format --check .
-
-
-    name: ESLint
+  frontend-lint:
+    name: ESLint (Frontend)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
