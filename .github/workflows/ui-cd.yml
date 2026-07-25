@@ -12,16 +12,16 @@ on:
       - 'booky_ui/**'                     
       - '.github/workflows/ui-cd.yml'
 
-#
-# Required permissions for Workload Identity Federation
-#
-permissions:
-  contents: read
-  id-token: write
-
 jobs:
   deploy-ui:
     runs-on: ubuntu-latest
+    #
+    # Required permissions for Workload Identity Federation
+    #
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
       #
       # 1. Checkout repository code
