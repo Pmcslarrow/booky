@@ -1,0 +1,51 @@
+name: Deploy UI to Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+
+    #
+    # Run only when book-ui/ changes or cd workflow file changes
+    #
+    paths:
+      - 'booky-ui/**'                     
+      - '.github/workflows/ui-cd.yml'
+
+#
+# Required permissions for Workload Identity Federation
+#
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-ui:
+    runs-on: ubuntu-latest
+    steps:
+      #
+      # 1. Checkout repository code
+      #
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      #
+      # 2. Authenticate to GCP using Workload Identity Federation
+      #
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      #
+      # 3. Deploy source code directly to Cloud Run
+      #
+      - name: Deploy UI Service
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: booky-ui-dev
+          region: us-east5              
+          source: ./booky-ui               
+          flags: '--allow-unauthenticated' # Public access
