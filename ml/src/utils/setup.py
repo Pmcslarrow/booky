@@ -1,16 +1,18 @@
 import os
-import re
 import pickle
-import torch
-import pandas as pd
+import re
 from typing import NamedTuple
-from ml.src.models.two_towers import TwoTowers, UserTower, ItemTower
+
+import pandas as pd
+import torch
+
+from ml.src.models.two_towers import ItemTower, TwoTowers, UserTower
+from ml.src.utils.config import Config
 from ml.src.utils.dataset import (
     BookRecommenderDataset,
     get_dataloaders,
     get_finetune_loader,
 )
-from ml.src.utils.config import Config
 
 
 class SetupResult(NamedTuple):

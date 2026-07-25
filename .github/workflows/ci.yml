@@ -5,26 +5,38 @@ on:
     types: [opened, edited, synchronize, reopened]
 
 jobs:
-  lint:
-    name: Ruff Linter
+  python-lint:
+    name: Ruff Linter (Backend)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install ruff
-        run: pip install ruff
+      - name: Install & Run Ruff
+        run: |
+          pip install ruff
+          ruff check booky_api
+          ruff format --check booky_api
 
-      - name: Run ruff check
-        run: ruff check .
+  frontend-lint:
+    name: ESLint (Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Run ruff format check
-        run: ruff format --check .
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install & Run ESLint
+        run: npm ci --prefix booky_ui && npm run lint --prefix booky_ui
 
   check-pr-title:
     name: PR Title Convention
