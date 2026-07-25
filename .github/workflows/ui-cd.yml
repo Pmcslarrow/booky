@@ -29,6 +29,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # Debugging
+      - name: Print GitHub OIDC Claims
+        run: |
+          echo "Repository:      '${{ github.repository }}'"
+          echo "Repository Owner:'${{ github.repository_owner }}'"
+          echo "Ref/Branch:      '${{ github.ref }}'"
+          echo "Environment:     '${{ job.environment }}'"
+
       #
       # 2. Authenticate to GCP using Workload Identity Federation
       #
