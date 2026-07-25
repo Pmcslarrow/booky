@@ -20,8 +20,8 @@ jobs:
       - name: Install & Run Ruff
         run: |
           pip install ruff
-          ruff check booky-api
-          ruff format --check booky-api
+          ruff check booky_api
+          ruff format --check booky_api
 
   frontend-lint:
     name: ESLint (Frontend)
@@ -36,7 +36,7 @@ jobs:
           node-version: '20'
 
       - name: Install & Run ESLint
-        run: npm ci --prefix booky-ui && npm run lint --prefix booky-ui
+        run: npm ci --prefix booky_ui && npm run lint --prefix booky_ui
 
   check-pr-title:
     name: PR Title Convention

@@ -9,7 +9,7 @@ on:
     # Run only when book-ui/ changes or cd workflow file changes
     #
     paths:
-      - 'booky-ui/**'                     
+      - 'booky_ui/**'                     
       - '.github/workflows/ui-cd.yml'
 
 #
@@ -45,7 +45,7 @@ jobs:
       - name: Deploy UI Service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: booky-ui-dev
+          service: booky_ui-dev
           region: us-east5              
-          source: ./booky-ui               
+          source: ./booky_ui               
           flags: '--allow-unauthenticated' # Public access
