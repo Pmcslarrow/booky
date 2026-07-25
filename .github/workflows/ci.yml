@@ -26,6 +26,21 @@ jobs:
       - name: Run ruff format check
         run: ruff format --check .
 
+
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install & Run ESLint
+        run: npm ci --prefix booky-ui && npm run lint --prefix booky-ui
+
   check-pr-title:
     name: PR Title Convention
     runs-on: ubuntu-latest
