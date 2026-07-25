@@ -1,10 +1,12 @@
-import torch
-import numpy as np
-from torch.utils.data import DataLoader
-from ml.src.models.two_towers import UserTower
-from ml.src.utils.dataset import BookRecommenderDataset
-from ml.src.utils.config import Config
 from collections import defaultdict
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+
+from ml.src.models.two_towers import UserTower
+from ml.src.utils.config import Config
+from ml.src.utils.dataset import BookRecommenderDataset
 
 
 class Metrics:

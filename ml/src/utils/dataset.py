@@ -1,8 +1,7 @@
-import torch
-from torch.utils.data import Dataset, DataLoader, Subset
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+import torch
+from torch.utils.data import DataLoader, Dataset, Subset
 
 # User Tower -- User-ID, Age
 # Item Tower -- ISBN, Book-Title, Book-Author, Publisher, Year-Of-Publication
