@@ -53,7 +53,7 @@ jobs:
       - name: Deploy UI Service
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: booky_ui-dev
+          service: booky-ui-dev
           region: us-east5              
           source: ./booky_ui               
           flags: '--allow-unauthenticated' # Public access
