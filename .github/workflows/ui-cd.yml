@@ -54,6 +54,6 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: booky-ui-dev
-          region: us-east5              
+          region: us-central1              
           source: ./booky_ui               
           flags: '--allow-unauthenticated' # Public access
