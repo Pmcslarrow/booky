@@ -55,3 +55,21 @@ booky/
 ## Booky Design
 
 <img src="ml/booky_recommender.png" width="750px">
+
+## Citation
+
+I am using datasets to train these models from UCSD datasets.
+
+```
+Ups and downs: Modeling the visual evolution of fashion trends with one-class collaborative filtering
+R. He, J. McAuley
+WWW, 2016
+
+Image-based recommendations on styles and substitutes
+J. McAuley, C. Targett, J. Shi, A. van den Hengel
+SIGIR, 2015
+
+Mengting Wan, Julian McAuley, "Item Recommendation on Monotonic Behavior Chains", in RecSys'18. [bibtex]
+
+Mengting Wan, Rishabh Misra, Ndapa Nakashole, Julian McAuley, "Fine-Grained Spoiler Detection from Large-Scale Review Corpora", in ACL'19. [bibtex]
+```
