@@ -2,6 +2,7 @@
 
 import pickle
 import torch
+import torch.nn.functional as F
 from models import UserTower, ItemTower, TwoTowers
 
 ### CONSTANTS ### 
@@ -9,6 +10,7 @@ from models import UserTower, ItemTower, TwoTowers
 KEY_BOOKS = 'books'
 KEY_ARTIFACTS = 'artifacts'
 KEY_MODEL = 'model'
+KEY_STATE_DICT = 'state'
 
 PATH_BOOKS = 'artifacts/books.pkl'
 PATH_ARTIFACTS = 'artifacts/artifacts.pkl'
@@ -32,7 +34,7 @@ def load_pickle_file(path):
     return data
 
 # Returns a dictionary of variables captured during training, used for inference.
-def get_artifacts():
+def get_model_variables():
     books = load_pickle_file(PATH_BOOKS)
     artifacts = load_pickle_file(PATH_ARTIFACTS)
     state_dict = torch.load(PATH_MODEL)
@@ -50,11 +52,55 @@ def get_artifacts():
     return {
         KEY_BOOKS: books,
         KEY_ARTIFACTS: artifacts,
-        KEY_MODEL: model
+        KEY_MODEL: model,
+        KEY_STATE_DICT: state_dict
     }
 
+@torch.no_grad()
+def recommend_for_user(user_idx, artifacts, state, model, k=100, exclude_seen=True):
+    model.eval()
+    # Embed every book once
+    all_books = torch.arange(state['n_books'])
+    all_ranks = state['book_rank_scaled_idx']
+    book_vectors = F.normalize(model.item_tower(all_books, all_ranks, state['book_title_emb']), p=2, dim=1)
+
+    # Embed the single user
+    user_tensor = torch.tensor([user_idx])
+    user_vector = F.normalize(model.user_tower(user_tensor), p=2, dim=1)
+
+    # Cosine similarity of this user against every book
+    scores = (user_vector @ book_vectors.T).squeeze(0)
+
+    # Hide books the user has already reviewed
+    if exclude_seen:
+        seen = list(artifacts['user_pos_books'].get(user_idx, set()))
+        scores[seen] = float("-inf")
+
+    top_scores, top_idx = torch.topk(scores, k)
+    return top_idx.cpu().numpy(), top_scores.cpu().numpy()
+
+
 def main():
-    artifacts = get_artifacts()
+    variables = get_model_variables()
+    artifacts = variables[KEY_ARTIFACTS]
+    books = variables[KEY_BOOKS]
+    model = variables[KEY_MODEL]
+    state = variables[KEY_STATE_DICT]
+
+    user_idx = 1000
+    top_book_idxs, top_scores = recommend_for_user(
+        user_idx, 
+        artifacts,
+        state, 
+        model, 
+        k=100
+    ) 
+
+    recommendations = books.loc[top_book_idxs, ["book_id", "book_title", "book_rank"]].copy()
+    recommendations["score"] = top_scores
+    recommendations.reset_index(drop=True)
+
+    print(recommendations.head())
 
 if __name__ == "__main__":
     main()
