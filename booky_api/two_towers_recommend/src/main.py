@@ -2,22 +2,28 @@
 
 import os
 import pickle
+from pathlib import Path
 import torch
 import torch.nn.functional as F
-import functions_framework
-from flask import jsonify
-from models import UserTower, ItemTower, TwoTowers
+from flask import Flask, jsonify, request
+from .models import UserTower, ItemTower, TwoTowers
+
+app = Flask(__name__)
 
 ### CONSTANTS ###
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 KEY_BOOKS = 'books'
 KEY_ARTIFACTS = 'artifacts'
 KEY_MODEL = 'model'
 KEY_STATE_DICT = 'state'
 
-PATH_BOOKS = 'artifacts/books.pkl'
-PATH_ARTIFACTS = 'artifacts/artifacts.pkl'
-PATH_MODEL = 'artifacts/model.pth'
+ARTIFACTS_DIR = BASE_DIR / "artifacts"
+
+PATH_BOOKS = ARTIFACTS_DIR / "books.pkl"
+PATH_ARTIFACTS = ARTIFACTS_DIR / "artifacts.pkl"
+PATH_MODEL = ARTIFACTS_DIR / "model.pth"
 
 ### FUNCTIONS ### 
 
@@ -78,36 +84,44 @@ def recommend_for_user(user_idx, artifacts, state, model, k=100, exclude_seen=Tr
     top_scores, top_idx = torch.topk(scores, k)
     return top_idx.cpu().numpy(), top_scores.cpu().numpy()
 
-### HTTP ENTRY POINT ###
 
-@functions_framework.http
-def recommend(request):
+
+@app.route("/healthz", methods=["GET"])
+def healthz():
+    """Vertex AI uses this route to confirm the container is ready."""
+    if _VARS:
+        return jsonify({"status": "healthy"}), 200
+    return jsonify({"status": "loading_artifacts"}), 503
+
+@app.route('/recommend', methods=["GET"])
+def recommend():
     """
     Query params:
-      user_idx (int, required)
-      k        (int, optional, default 100)
-      exclude_seen (bool, optional, default true)
+      userIdx       (int, required)
+      k             (int, optional, default 100)
     """
-    args = request.args
-
-    user_idx_raw = args.get("user_idx")
+    user_idx_raw = request.args.get('userIdx')
     if user_idx_raw is None:
-        return jsonify({"error": "missing required param 'user_idx'"}), 400
+        return jsonify({"error": "missing required param 'userIdx'"}), 400
+
+    k = int(request.args.get("k", default=100, type=int))
 
     try:
         user_idx = int(user_idx_raw)
     except ValueError:
-        return jsonify({"error": "'user_idx' must be an integer"}), 400
+        return jsonify({"error": "'userIdx' must be an integer"}), 400
 
     if not (0 <= user_idx < _STATE["n_users"]):
-        return jsonify({"error": f"'user_idx' out of range [0, {_STATE['n_users']})"}), 400
-
-    k = int(args.get("k", 100))
-    exclude_seen = args.get("exclude_seen", "true").lower() != "false"
+        return jsonify({"error": f"'userIdx' out of range [0, {_STATE['n_users']})"}), 400
 
     try:
         top_book_idxs, top_scores = recommend_for_user(
-            user_idx, _ARTIFACTS, _STATE, _MODEL, k=k, exclude_seen=exclude_seen
+            user_idx, 
+            _ARTIFACTS, 
+            _STATE, 
+            _MODEL, 
+            k=k, 
+            exclude_seen=True
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -117,7 +131,11 @@ def recommend(request):
     recommendations = recommendations.reset_index(drop=True)
 
     return jsonify({
-        "user_idx": user_idx,
+        "userIdx": user_idx,
         "k": k,
         "recommendations": recommendations.to_dict(orient="records")
     })
+
+
+if __name__ == '__main__':
+    app.run()
