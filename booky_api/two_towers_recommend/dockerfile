@@ -1,16 +1,14 @@
 FROM python:3.11-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
-
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY src/ ./src/
-COPY artifacts/ ./artifacts/
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8080
 
-EXPOSE 8000
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "src.main:app"]
+CMD exec gunicorn --bind 0.0.0.0:${AIP_HTTP_PORT:-8080} \
+    --workers 1 --threads 4 --timeout 300 \
+    --access-logfile - \
+    src.main:app

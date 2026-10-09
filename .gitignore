@@ -10,3 +10,4 @@ events.*
 amazon-books/data/
 *.pth
 *.pkl
+*.env

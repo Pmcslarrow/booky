@@ -1,40 +1,66 @@
 # main.py
 
 import os
+import io
 import pickle
-from pathlib import Path
 import torch
 import torch.nn.functional as F
+from google.cloud import storage
 from flask import Flask, jsonify, request
 from .models import UserTower, ItemTower, TwoTowers
 
 app = Flask(__name__)
 
-### CONSTANTS ###
+HEALTH_ROUTE = os.environ.get("AIP_HEALTH_ROUTE", "/health")
+PREDICT_ROUTE = os.environ.get("AIP_PREDICT_ROUTE", "/recommend")
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+### CONSTANTS ###
 
 KEY_BOOKS = 'books'
 KEY_ARTIFACTS = 'artifacts'
 KEY_MODEL = 'model'
 KEY_STATE_DICT = 'state'
 
-ARTIFACTS_DIR = BASE_DIR / "artifacts"
-
-PATH_BOOKS = ARTIFACTS_DIR / "books.pkl"
-PATH_ARTIFACTS = ARTIFACTS_DIR / "artifacts.pkl"
-PATH_MODEL = ARTIFACTS_DIR / "model.pth"
+PATH_BOOKS = "books.pkl"
+PATH_ARTIFACTS = "artifacts.pkl"
+PATH_MODEL = "model.pth"
 
 ### FUNCTIONS ### 
 
-def load_pickle_file(path):
-    with open(path, 'rb') as file:
-        return pickle.load(file)
+def load_torch_file(path: str):
+    if path.startswith("gs://"):
+        buffer = io.BytesIO(get_blob(path).download_as_bytes())
+        return torch.load(buffer, map_location="cpu")
+    return torch.load(path, map_location="cpu")
 
-def get_model_variables():
-    books = load_pickle_file(PATH_BOOKS)
-    artifacts = load_pickle_file(PATH_ARTIFACTS)
-    state_dict = torch.load(PATH_MODEL, map_location="cpu")
+def get_blob(gcs_path):
+    bucket_name, blob_path = gcs_path.replace("gs://", "").split("/", 1)
+    client = storage.Client()
+    return client.bucket(bucket_name).blob(blob_path)
+
+def load_pickle_file(path: str):
+    if path.startswith("gs://"):
+        blob = get_blob(path)
+        return pickle.loads(blob.download_as_bytes())
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
+def load_model_variables():
+    base_path = os.environ.get("AIP_STORAGE_URI", "artifacts")
+    if not base_path:
+        raise ValueError("AIP_STORAGE_URI is missing. Ensure this is running inside Vertex AI.")
+
+    books_file_path = os.path.join(base_path, PATH_BOOKS)
+    artifacts_file_path = os.path.join(base_path, PATH_ARTIFACTS)
+    model_file_path = os.path.join(base_path, PATH_MODEL)
+
+    print(f"Loading model weights from: {model_file_path}")
+    print(f"Loading artifacts from {artifacts_file_path}")
+    print(f"Loading books from {books_file_path}")
+
+    books = load_pickle_file(books_file_path)
+    artifacts = load_pickle_file(artifacts_file_path)
+    state_dict = load_torch_file(model_file_path)
 
     n_users = state_dict["n_users"]
     n_books = state_dict["n_books"]
@@ -55,87 +81,75 @@ def get_model_variables():
     }
 
 # This runs ONCE per container instance, not per-request.
-_VARS = get_model_variables()
+_VARS = load_model_variables()
 _ARTIFACTS = _VARS[KEY_ARTIFACTS]
 _BOOKS = _VARS[KEY_BOOKS]
 _MODEL = _VARS[KEY_MODEL]
 _STATE = _VARS[KEY_STATE_DICT]
 
+with torch.no_grad():
+    _BOOK_VECTORS = F.normalize(
+        _MODEL.item_tower(
+            torch.arange(_STATE["n_books"]),
+            _STATE["book_rank_scaled_idx"],
+            _STATE["book_title_emb"],
+        ),
+        p=2, dim=1,
+    )
+
+
 ### INFERENCE ###
 
 @torch.no_grad()
-def recommend_for_user(user_idx, artifacts, state, model, k=100, exclude_seen=True):
-    all_books = torch.arange(state['n_books'])
-    all_ranks = state['book_rank_scaled_idx']
-    book_vectors = F.normalize(
-        model.item_tower(all_books, all_ranks, state['book_title_emb']), p=2, dim=1
-    )
-
-    user_tensor = torch.tensor([user_idx])
-    user_vector = F.normalize(model.user_tower(user_tensor), p=2, dim=1)
-
-    scores = (user_vector @ book_vectors.T).squeeze(0)
+def recommend_for_user(user_idx, k=100, exclude_seen=True):
+    user_vector = F.normalize(_MODEL.user_tower(torch.tensor([user_idx])), p=2, dim=1)
+    scores = (user_vector @ _BOOK_VECTORS.T).squeeze(0)
 
     if exclude_seen:
-        seen = list(artifacts['user_pos_books'].get(user_idx, set()))
-        scores[seen] = float("-inf")
+        seen = list(_ARTIFACTS["user_pos_books"].get(user_idx, set()))
+        if seen:
+            scores[seen] = float("-inf")
 
     k = min(k, scores.shape[0])
     top_scores, top_idx = torch.topk(scores, k)
     return top_idx.cpu().numpy(), top_scores.cpu().numpy()
 
+@app.route(HEALTH_ROUTE, methods=["GET"])
+def health():
+    return "OK", 200
 
-
-@app.route("/healthz", methods=["GET"])
-def healthz():
-    """Vertex AI uses this route to confirm the container is ready."""
-    if _VARS:
-        return jsonify({"status": "healthy"}), 200
-    return jsonify({"status": "loading_artifacts"}), 503
-
-@app.route('/recommend', methods=["GET"])
+@app.route(PREDICT_ROUTE, methods=["POST"])
 def recommend():
-    """
-    Query params:
-      userIdx       (int, required)
-      k             (int, optional, default 100)
-    """
-    user_idx_raw = request.args.get('userIdx')
-    if user_idx_raw is None:
-        return jsonify({"error": "missing required param 'userIdx'"}), 400
+    body = request.get_json(silent=True) or {}
+    instances = body.get("instances")
+    if not instances:
+        return jsonify({"error": "body must contain non-empty 'instances'"}), 400
 
-    k = int(request.args.get("k", default=100, type=int))
-
+    predictions = []
     try:
-        user_idx = int(user_idx_raw)
-    except ValueError:
-        return jsonify({"error": "'userIdx' must be an integer"}), 400
+        for inst in instances:
+            user_idx = int(inst["userIdx"])
+            k = int(inst.get("k", 100))
 
-    if not (0 <= user_idx < _STATE["n_users"]):
-        return jsonify({"error": f"'userIdx' out of range [0, {_STATE['n_users']})"}), 400
+            if k <= 0:
+                return jsonify({"error": "'k' must be positive"}), 400
+            if not (0 <= user_idx < _STATE["n_users"]):
+                return jsonify({"error": f"'userIdx' out of range [0, {_STATE['n_users']})"}), 400
 
-    try:
-        top_book_idxs, top_scores = recommend_for_user(
-            user_idx, 
-            _ARTIFACTS, 
-            _STATE, 
-            _MODEL, 
-            k=k, 
-            exclude_seen=True
-        )
+            idxs, scores = recommend_for_user(user_idx, k=k)
+            recs = _BOOKS.iloc[idxs][["book_id", "book_title", "book_rank"]].copy()
+            recs["score"] = scores
+            predictions.append({
+                "userIdx": user_idx,
+                "k": k,
+                "recommendations": recs.to_dict(orient="records"),
+            })
+    except (KeyError, ValueError, TypeError) as e:
+        return jsonify({"error": f"bad request: {e}"}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    recommendations = _BOOKS.loc[top_book_idxs, ["book_id", "book_title", "book_rank"]].copy()
-    recommendations["score"] = top_scores
-    recommendations = recommendations.reset_index(drop=True)
-
-    return jsonify({
-        "userIdx": user_idx,
-        "k": k,
-        "recommendations": recommendations.to_dict(orient="records")
-    })
-
+    return jsonify({"predictions": predictions})
 
 if __name__ == '__main__':
     app.run()

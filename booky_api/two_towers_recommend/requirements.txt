@@ -1,4 +1,7 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch
-pandas
+numpy
 flask
 gunicorn
+google-cloud-storage
+pandas
