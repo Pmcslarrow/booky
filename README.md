@@ -31,27 +31,43 @@ Note: My full-time job takes priority over this side project, and I will do my b
 ## Directory
 
 ```
-booky/
-├── ml/                                                         
-│   ├── artifacts  // git ignored                                              
-│   ├── data // git ignored                                           
-│   ├── notebooks/                                              # Contains the initial two-tower model code through inference (refactoring)
-│   │   └── two_towers_final_edition.ipynb                      
-│   ├── requirements.txt
-│   └── src/
-│       ├── train.py                                            # Training functionality
-│       ├── models/                                             # Class definitions for the two-tower models
-│       │   └── two_towers.py
-│       └── utils/                                               
-│           ├── config.py                                       # Global config variables encapsulated in a Config() class
-│           ├── dataset.py                                      # helper functions for dataset-related things / contains 
-│           ├── metrics.py                                      # helper functions for metric calculations 
-│           └── preprocess.py                                   # helper functions for processing any data
-├── pyproject.toml
+.
+├── amazon-books                    // ML / Replaces the former `ml/` folder with the amazon-books dataset training logic
+│   ├── data
+│   │   ├── Books_5.json.gz
+│   │   ├── isbn_image.csv
+│   │   └── meta_Books.json.gz
+│   ├── main.ipynb
+│   └── state
+├── booky_api                       // Backend / API endpoints that are fed to GCP `booky_api/<model>/*`
+│   └── two_towers_recommend
+│       ├── dockerfile
+│       ├── makefile
+│       ├── pyproject.toml
+│       ├── requirements.txt
+│       └── src
+│           ├── main.py
+│           └── models.py
+├── booky_recommender.png
+├── booky_ui                        // UI
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
 ├── makefile
+├── pyproject.toml
 └── README.md
 ```
 
 ## Booky Design
 
-<img src="ml/booky_recommender.png" width="750px">
+<img src="booky_recommender.png" width="750px">

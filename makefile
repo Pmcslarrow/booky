@@ -9,4 +9,7 @@ test:
 lint: 
 	ruff check . --fix
 
+format:
+	ruff format .
+
 
