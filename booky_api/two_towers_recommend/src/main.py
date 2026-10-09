@@ -1,13 +1,15 @@
 # main.py
 
-import os
 import io
+import os
 import pickle
+
 import torch
 import torch.nn.functional as F
-from google.cloud import storage
 from flask import Flask, jsonify, request
-from .models import UserTower, ItemTower, TwoTowers
+from google.cloud import storage
+
+from .models import ItemTower, TwoTowers, UserTower
 
 app = Flask(__name__)
 
