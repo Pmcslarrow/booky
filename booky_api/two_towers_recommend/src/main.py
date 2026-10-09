@@ -148,8 +148,8 @@ def recommend():
             })
     except (KeyError, ValueError, TypeError) as e:
         return jsonify({"error": f"bad request: {e}"}), 400
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except (RuntimeError, OSError):
+        return jsonify({"error": "internal error"}), 500
 
     return jsonify({"predictions": predictions})
 
