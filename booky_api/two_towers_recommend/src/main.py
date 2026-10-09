@@ -18,16 +18,17 @@ PREDICT_ROUTE = os.environ.get("AIP_PREDICT_ROUTE", "/recommend")
 
 ### CONSTANTS ###
 
-KEY_BOOKS = 'books'
-KEY_ARTIFACTS = 'artifacts'
-KEY_MODEL = 'model'
-KEY_STATE_DICT = 'state'
+KEY_BOOKS = "books"
+KEY_ARTIFACTS = "artifacts"
+KEY_MODEL = "model"
+KEY_STATE_DICT = "state"
 
 PATH_BOOKS = "books.pkl"
 PATH_ARTIFACTS = "artifacts.pkl"
 PATH_MODEL = "model.pth"
 
-### FUNCTIONS ### 
+### FUNCTIONS ###
+
 
 def load_torch_file(path: str):
     if path.startswith("gs://"):
@@ -35,10 +36,12 @@ def load_torch_file(path: str):
         return torch.load(buffer, map_location="cpu")
     return torch.load(path, map_location="cpu")
 
+
 def get_blob(gcs_path):
     bucket_name, blob_path = gcs_path.replace("gs://", "").split("/", 1)
     client = storage.Client()
     return client.bucket(bucket_name).blob(blob_path)
+
 
 def load_pickle_file(path: str):
     if path.startswith("gs://"):
@@ -47,10 +50,13 @@ def load_pickle_file(path: str):
     with open(path, "rb") as f:
         return pickle.load(f)
 
+
 def load_model_variables():
     base_path = os.environ.get("AIP_STORAGE_URI", "artifacts")
     if not base_path:
-        raise ValueError("AIP_STORAGE_URI is missing. Ensure this is running inside Vertex AI.")
+        raise ValueError(
+            "AIP_STORAGE_URI is missing. Ensure this is running inside Vertex AI."
+        )
 
     books_file_path = os.path.join(base_path, PATH_BOOKS)
     artifacts_file_path = os.path.join(base_path, PATH_ARTIFACTS)
@@ -82,6 +88,7 @@ def load_model_variables():
         KEY_STATE_DICT: state_dict,
     }
 
+
 # This runs ONCE per container instance, not per-request.
 _VARS = load_model_variables()
 _ARTIFACTS = _VARS[KEY_ARTIFACTS]
@@ -96,11 +103,13 @@ with torch.no_grad():
             _STATE["book_rank_scaled_idx"],
             _STATE["book_title_emb"],
         ),
-        p=2, dim=1,
+        p=2,
+        dim=1,
     )
 
 
 ### INFERENCE ###
+
 
 @torch.no_grad()
 def recommend_for_user(user_idx, k=100, exclude_seen=True):
@@ -116,9 +125,11 @@ def recommend_for_user(user_idx, k=100, exclude_seen=True):
     top_scores, top_idx = torch.topk(scores, k)
     return top_idx.cpu().numpy(), top_scores.cpu().numpy()
 
+
 @app.route(HEALTH_ROUTE, methods=["GET"])
 def health():
     return "OK", 200
+
 
 @app.route(PREDICT_ROUTE, methods=["POST"])
 def recommend():
@@ -136,16 +147,20 @@ def recommend():
             if k <= 0:
                 return jsonify({"error": "'k' must be positive"}), 400
             if not (0 <= user_idx < _STATE["n_users"]):
-                return jsonify({"error": f"'userIdx' out of range [0, {_STATE['n_users']})"}), 400
+                return jsonify(
+                    {"error": f"'userIdx' out of range [0, {_STATE['n_users']})"}
+                ), 400
 
             idxs, scores = recommend_for_user(user_idx, k=k)
             recs = _BOOKS.iloc[idxs][["book_id", "book_title", "book_rank"]].copy()
             recs["score"] = scores
-            predictions.append({
-                "userIdx": user_idx,
-                "k": k,
-                "recommendations": recs.to_dict(orient="records"),
-            })
+            predictions.append(
+                {
+                    "userIdx": user_idx,
+                    "k": k,
+                    "recommendations": recs.to_dict(orient="records"),
+                }
+            )
     except (KeyError, ValueError, TypeError) as e:
         return jsonify({"error": f"bad request: {e}"}), 400
     except (RuntimeError, OSError):
@@ -153,5 +168,6 @@ def recommend():
 
     return jsonify({"predictions": predictions})
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app.run()
