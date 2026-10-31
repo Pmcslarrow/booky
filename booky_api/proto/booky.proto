@@ -1,0 +1,18 @@
+syntax = "proto3";
+package booky;
+
+option go_package = "github.com/pmcslarrow/booky/booky_api/proto;booky";
+
+import "google/api/annotations.proto";
+
+message LoginRequest {}
+message LoginResponse {}
+
+service AuthService {
+    rpc Login (LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/v1/login"
+            body: "*"
+        };
+    }
+}
